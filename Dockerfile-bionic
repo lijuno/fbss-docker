@@ -1,0 +1,53 @@
+FROM public.ecr.aws/ubuntu/ubuntu:18.04 AS base
+
+ENV UBUNTU_CODENAME=bionic
+ENV DEBIAN_FRONTEND=nonintercative
+ENV TZ=America/Los_Angeles
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# Use local Ubuntu sources if necessary
+# COPY source_mirrors/aliyun_sources_bionic.list /etc/apt/sources.list
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gnupg dirmngr ca-certificates git wget unzip curl \
+    build-essential cmake \
+    libssl-dev libboost-serialization-dev \
+    `# OpenCV required deps` libgtk2.0-dev pkg-config libavcodec-dev libavformat-dev libswscale-dev \
+    `# OpenCV optional deps: python-dev python-numpy libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev libjasper-dev libdc1394-22-dev` \
+    `# Ceres-solver` libgoogle-glog-dev libgflags-dev libatlas-base-dev libsuitesparse-dev libeigen3-dev \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+FROM base AS opencv
+
+ENV OPENCV_VERSION=3.2.0
+
+RUN curl -L0 https://github.com/opencv/opencv/archive/${OPENCV_VERSION}.zip > ${OPENCV_VERSION}.zip && \
+    unzip ${OPENCV_VERSION}.zip
+
+RUN cd opencv-${OPENCV_VERSION} && \
+    mkdir build && \
+    cd build && \
+    cmake -D CMAKE_BUILD_TYPE=Release –D CMAKE_INSTALL_PREFIX=/usr/local .. && \
+    make && \
+    make install
+
+
+FROM base AS ceres
+
+ENV CERES_VERSION=1.12.0
+
+RUN curl -L0 https://github.com/ceres-solver/ceres-solver/archive/${CERES_VERSION}.zip > ${CERES_VERSION}.zip && \
+    unzip ${CERES_VERSION}.zip
+
+RUN cd ceres-solver-${CERES_VERSION} && \
+    mkdir build && \
+    cd build && \
+    cmake .. && \
+    make && \
+    make install
+
+
+FROM base AS fbss
+
+COPY --from=opencv /usr/local /usr/local
+COPY --from=ceres  /usr/local /usr/local
