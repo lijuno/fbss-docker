@@ -9,7 +9,7 @@ on:
   push:
     branches: [ "master" ]
   paths:
-    Dockerfile-bionic
+    - Dockerfile-bionic
 
 env:
   # Use docker.io for Docker Hub if empty
