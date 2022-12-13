@@ -8,8 +8,8 @@ name: Docker for fast bilateral space stereo
 on:
   push:
     branches: [ "master" ]
-  paths:
-    - Dockerfile-bionic
+    paths:
+      - Dockerfile-bionic
 
 env:
   # Use docker.io for Docker Hub if empty
