@@ -51,3 +51,4 @@ FROM base AS fbss
 
 COPY --from=opencv /usr/local /usr/local
 COPY --from=ceres  /usr/local /usr/local
+
